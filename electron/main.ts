@@ -1,10 +1,12 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
+import { DeckManager } from "./services/DeckManager"
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const deckManager = new DeckManager();
 
 // The built directory structure
 //
@@ -64,5 +66,9 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+ipcMain.handle("decks:load", async () => {
+    return deckManager.getDecks();
+});
 
 app.whenReady().then(createWindow)

@@ -1,9 +1,32 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import path from "node:path";
+class DeckManager {
+  async getCardsCount(filePath) {
+    const contents = await fs.readFile(filePath, "utf-8");
+    return contents.split("\n").map((line) => line.trim()).filter((line) => line !== "").length;
+  }
+  async getDecks() {
+    const decksPath = path.join(process.cwd(), "decks");
+    const files = await fs.readdir(decksPath);
+    const deckFiles = files.filter((file) => file.endsWith(".txt"));
+    const decks = [];
+    for (const file of deckFiles) {
+      const filePath = path.join(decksPath, file);
+      decks.push({
+        name: path.parse(file).name,
+        path: filePath,
+        cardCount: await this.getCardsCount(filePath)
+      });
+    }
+    return decks;
+  }
+}
 createRequire(import.meta.url);
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
+const deckManager = new DeckManager();
 process.env.APP_ROOT = path.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
@@ -36,6 +59,9 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+ipcMain.handle("decks:load", async () => {
+  return deckManager.getDecks();
 });
 app.whenReady().then(createWindow);
 export {
