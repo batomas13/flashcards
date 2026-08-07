@@ -5,20 +5,46 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 class DeckManager {
   async getCardsCount(filePath) {
-    const contents = await fs.readFile(filePath, "utf-8");
-    return contents.split("\n").map((line) => line.trim()).filter((line) => line !== "").length;
+    const contents = await fs.readFile(
+      filePath,
+      "utf-8"
+    );
+    return contents.split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== "").length;
+  }
+  async getCards(filePath) {
+    const contents = await fs.readFile(
+      filePath,
+      "utf-8"
+    );
+    return contents.split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== "").map((line) => {
+      const [hanzi, pinyin] = line.split(":");
+      return {
+        hanzi,
+        pinyin
+      };
+    });
   }
   async getDecks() {
-    const decksPath = path.join(process.cwd(), "decks");
+    const decksPath = path.join(
+      process.cwd(),
+      "decks"
+    );
     const files = await fs.readdir(decksPath);
-    const deckFiles = files.filter((file) => file.endsWith(".txt"));
+    const deckFiles = files.filter(
+      (file) => file.endsWith(".txt")
+    );
     const decks = [];
     for (const file of deckFiles) {
-      const filePath = path.join(decksPath, file);
+      const filePath = path.join(
+        decksPath,
+        file
+      );
       decks.push({
         name: path.parse(file).name,
         path: filePath,
-        cardCount: await this.getCardsCount(filePath)
+        cardCount: await this.getCardsCount(
+          filePath
+        )
       });
     }
     return decks;
@@ -65,6 +91,9 @@ app.on("activate", () => {
 });
 ipcMain.handle("decks:load", async () => {
   return deckManager.getDecks();
+});
+ipcMain.handle("decks:getCards", async (_, filePath) => {
+  return deckManager.getCards(filePath);
 });
 app.whenReady().then(createWindow);
 export {

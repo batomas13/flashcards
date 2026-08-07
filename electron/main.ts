@@ -75,4 +75,8 @@ ipcMain.handle("decks:load", async () => {
     return deckManager.getDecks();
 });
 
+ipcMain.handle("decks:getCards", async (_, filePath: string) => {
+    return deckManager.getCards(filePath);
+});
+
 app.whenReady().then(createWindow)

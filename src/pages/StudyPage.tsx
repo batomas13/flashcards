@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Header from "../components/Header";
 import Card from "../components/Card";
@@ -7,6 +7,11 @@ import type { Deck } from "../models/Deck";
 import type { Card as FlashCard } from "../models/Card";
 import type { StudyMode } from "../models/StudyMode";
 import type { CardAnimation } from "../models/CardAnimation";
+
+import {
+    createStudySession,
+    type StudySession,
+} from "../services/StudyService";
 
 import "../styles/StudyPage.css";
 import "../styles/Button.css";
@@ -23,23 +28,10 @@ function StudyPage({
     onBack,
 }: StudyPageProps) {
 
-    // Temporary mock data until the backend is ready
-    const cards: FlashCard[] = [
-        {
-            hanzi: "你",
-            pinyin: "nǐ",
-        },
-        {
-            hanzi: "我",
-            pinyin: "wǒ",
-        },
-        {
-            hanzi: "他",
-            pinyin: "tā",
-        },
-    ];
-
     const PAGE_TURN_DURATION = 800;
+
+    const [session, setSession] =
+        useState<StudySession | null>(null);
 
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -48,17 +40,23 @@ function StudyPage({
     const [animation, setAnimation] =
         useState<CardAnimation>(null);
 
-    const currentCard = cards[currentIndex];
+    useEffect(() => {
 
-    const front =
-        mode === "hanzi"
-            ? currentCard.hanzi
-            : currentCard.pinyin;
+        async function loadStudySession() {
 
-    const back =
-        mode === "hanzi"
-            ? currentCard.pinyin
-            : currentCard.hanzi;
+            const cards: FlashCard[] =
+                await window.api.decks.getCards(deck.path);
+
+            const studySession =
+                createStudySession(cards, mode);
+
+            setSession(studySession);
+
+        }
+
+        loadStudySession();
+
+    }, [deck.path, mode]);
 
     function toggleCard() {
         setOpen((previous) => !previous);
@@ -66,7 +64,7 @@ function StudyPage({
 
     function previousCard() {
 
-        if (currentIndex === 0) {
+        if (!session || currentIndex === 0) {
             return;
         }
 
@@ -87,12 +85,14 @@ function StudyPage({
             }, PAGE_TURN_DURATION / 2);
 
         }, PAGE_TURN_DURATION / 2);
-
     }
 
     function nextCard() {
 
-        if (currentIndex === cards.length - 1) {
+        if (
+            !session ||
+            currentIndex === session.cards.length - 1
+        ) {
             return;
         }
 
@@ -113,8 +113,26 @@ function StudyPage({
             }, PAGE_TURN_DURATION / 2);
 
         }, PAGE_TURN_DURATION / 2);
-
     }
+
+    if (!session) {
+        return (
+            <main className="study-page">
+
+                <Header
+                    title={deck.name}
+                    onBack={onBack}
+                />
+
+                <p className="study-progress">
+                    Loading cards...
+                </p>
+
+            </main>
+        );
+    }
+
+    const currentCard = session.cards[currentIndex];
 
     return (
         <main className="study-page">
@@ -125,12 +143,12 @@ function StudyPage({
             />
 
             <p className="study-progress">
-                Card {currentIndex + 1} / {cards.length}
+                Card {currentIndex + 1} / {session.cards.length}
             </p>
 
             <Card
-                front={front}
-                back={back}
+                front={currentCard.front}
+                back={currentCard.back}
                 open={open}
                 animation={animation}
                 onToggle={toggleCard}
