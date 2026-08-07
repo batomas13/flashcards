@@ -1,0 +1,45 @@
+.study-page {
+
+    min-height: 100vh;
+
+    background: white;
+
+    padding: 40px;
+
+    display: flex;
+
+    flex-direction: column;
+
+}
+
+.study-progress {
+
+    margin: 32px 0;
+
+    text-align: center;
+
+    color: #888;
+
+    font-size: 1rem;
+
+    font-weight: 500;
+
+}
+
+.study-actions {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 16px;
+
+    margin-top: 40px;
+
+}
+
+.study-actions .button {
+
+    min-width: 140px;
+
+}

@@ -1,0 +1,125 @@
+.deck-editor-page {
+
+    max-width: 900px;
+
+    margin: 0 auto;
+
+    padding: 40px;
+
+}
+
+.deck-editor-page label {
+
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-weight: 600;
+
+}
+
+.deck-name-input {
+
+    width: 100%;
+
+    padding: 12px;
+
+    margin-bottom: 24px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 10px;
+
+    font-size: 1rem;
+
+}
+
+.cards-textarea {
+
+    width: 100%;
+
+    min-height: 500px;
+
+    padding: 16px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 10px;
+
+    resize: vertical;
+
+    font-family: Consolas, monospace;
+
+    font-size: 1rem;
+
+}
+
+.editor-actions {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 16px;
+
+    margin-top: 24px;
+
+}
+
+.cards-editor {
+
+    display: flex;
+
+    border: 1px solid #ddd;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+    margin-bottom: 24px;
+
+}
+
+.line-numbers {
+
+    width: 60px;
+
+    padding: 16px 12px;
+
+    background: #f7f7f7;
+
+    color: #999;
+
+    text-align: right;
+
+    user-select: none;
+
+    font-family: Consolas, monospace;
+
+    line-height: 1.5;
+
+    border-right: 1px solid #ddd;
+
+}
+
+.cards-textarea {
+
+    flex: 1;
+
+    min-height: 500px;
+
+    padding: 16px;
+
+    border: none;
+
+    resize: none;
+
+    outline: none;
+
+    font-family: Consolas, monospace;
+
+    font-size: 1rem;
+
+    line-height: 1.5;
+
+}

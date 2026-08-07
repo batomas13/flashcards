@@ -1,0 +1,105 @@
+.modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0, 0, 0, .35);
+
+    z-index: 1000;
+}
+
+.modal {
+    position: relative;
+
+    width: 420px;
+
+    max-width: 90%;
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 32px;
+
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .18);
+
+    animation: modal-open .15s ease-out;
+}
+
+@keyframes modal-open {
+
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+/* ---------- Shared Modal Components ---------- */
+
+.modal-close {
+    position: absolute;
+
+    top: 16px;
+    right: 16px;
+
+    background: transparent;
+
+    border: none;
+
+    font-size: 1.2rem;
+
+    color: #666;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.modal-close:hover {
+    color: black;
+}
+
+.modal-title {
+    margin: 0 0 30px;
+
+    text-align: left;
+
+    color: #222;
+}
+
+.modal-button {
+    width: 100%;
+
+    padding: 20px;
+
+    border: 1px solid #e5e5e5;
+
+    border-radius: 14px;
+
+    background: white;
+
+    cursor: pointer;
+
+    transition: .2s;
+
+    text-align: left;
+}
+
+.modal-button:hover {
+    border-color: #cfcfcf;
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+}

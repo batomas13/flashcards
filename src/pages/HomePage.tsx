@@ -1,11 +1,30 @@
 import { useEffect, useState } from "react";
 
+import Modal from "../components/Modal";
+import StudyMenu from "../components/StudyMenu";
+
 import type { Deck } from "../models/Deck";
+import type { StudyMode } from "../models/StudyMode";
 
 import "../styles/HomePage.css";
 
-function HomePage() {
+interface HomePageProps {
+    onNewDeck: () => void;
+    onEditDeck: (deck: Deck) => void;
+    onStartStudy: (deck: Deck, mode: StudyMode) => void;
+}
+
+function HomePage({
+    onNewDeck,
+    onEditDeck,
+    onStartStudy,
+}: HomePageProps) {
+
     const [decks, setDecks] = useState<Deck[]>([]);
+
+    const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
+
+    const [studyOpen, setStudyOpen] = useState(false);
 
     useEffect(() => {
         loadDecks();
@@ -21,69 +40,98 @@ function HomePage() {
     }
 
     function handleDeckClick(deck: Deck) {
-        console.log("Study:", deck);
+        setSelectedDeck(deck);
+        setStudyOpen(true);
     }
 
-    function handleNewDeck() {
-        console.log("New Deck");
-    }
-
-    function handleEditDeck(deck: Deck) {
-        console.log("Edit:", deck);
+    function closeStudyMenu() {
+        setStudyOpen(false);
+        setSelectedDeck(null);
     }
 
     return (
-        <main className="home-page">
+        <>
+            <main className="home-page">
 
-            <header className="home-header">
-                <h1>Chinese Study</h1>
-                <p>Select a deck to begin studying.</p>
-            </header>
+                <header className="home-header">
 
-            <section className="deck-grid">
+                    <div>
 
-                {decks.map(deck => (
-                    <div
-                        key={deck.path}
-                        className="deck-card"
-                        onClick={() => handleDeckClick(deck)}
-                        role="button"
-                        tabIndex={0}
-                    >
+                        <h1>Chinese Study</h1>
 
-                        <button
-                            className="edit-button"
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                handleEditDeck(deck);
-                            }}
-                        >
-                            ⚙️
-                        </button>
-
-                        <div className="deck-name">
-                            {deck.name}
-                        </div>
-
-                        <div className="deck-count">
-                            {deck.cardCount} cards
-                        </div>
+                        <p>Select a deck to begin studying.</p>
 
                     </div>
-                ))}
 
-            </section>
+                    <button
+                        className="new-deck-button"
+                        onClick={onNewDeck}
+                    >
+                        ➕ New Deck
+                    </button>
 
-            <div className="home-actions">
-                <button
-                    className="new-deck-button"
-                    onClick={handleNewDeck}
-                >
-                    ➕ New Deck
-                </button>
-            </div>
+                </header>
 
-        </main>
+                <section className="deck-grid">
+
+                    {decks.map((deck) => (
+                        <div
+                            key={deck.path}
+                            className="deck-card"
+                            onClick={() => handleDeckClick(deck)}
+                        >
+
+                            <button
+                                className="edit-button"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onEditDeck(deck);
+                                }}
+                            >
+                                ⚙️
+                            </button>
+
+                            <div className="deck-icon">
+                                📖
+                            </div>
+
+                            <div className="deck-name">
+                                {deck.name}
+                            </div>
+
+                            <div className="deck-count">
+                                {deck.cardCount} cards
+                            </div>
+
+                        </div>
+                    ))}
+
+                </section>
+
+            </main>
+
+            <Modal
+                open={studyOpen}
+                onClose={closeStudyMenu}
+            >
+
+                {selectedDeck && (
+                    <StudyMenu
+                        deck={selectedDeck}
+                        onClose={closeStudyMenu}
+                        onStartStudy={(deck, mode) => {
+
+                            closeStudyMenu();
+
+                            onStartStudy(deck, mode);
+
+                        }}
+                    />
+                )}
+
+            </Modal>
+
+        </>
     );
 }
 
