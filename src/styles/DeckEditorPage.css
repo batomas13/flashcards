@@ -34,26 +34,6 @@
 
 }
 
-.cards-textarea {
-
-    width: 100%;
-
-    min-height: 500px;
-
-    padding: 16px;
-
-    border: 1px solid #ddd;
-
-    border-radius: 10px;
-
-    resize: vertical;
-
-    font-family: Consolas, monospace;
-
-    font-size: 1rem;
-
-}
-
 .editor-actions {
 
     display: flex;
@@ -106,13 +86,13 @@
 
     flex: 1;
 
-    min-height: 500px;
+    height: 300px;
 
     padding: 16px;
 
     border: none;
 
-    resize: none;
+    resize: vertical;
 
     outline: none;
 
@@ -121,5 +101,75 @@
     font-size: 1rem;
 
     line-height: 1.5;
+
+}
+
+/* ---------- Error line ---------- */
+
+.line-number {
+
+    position: relative;
+
+    height: 1.5em;
+
+}
+
+.line-number.error-line {
+
+    background: #ffe5e5;
+
+    color: #d32f2f;
+
+    font-weight: 600;
+
+}
+
+.error-dot {
+
+    position: absolute;
+
+    left: -4px;
+
+    top: 50%;
+
+    width: 7px;
+
+    height: 7px;
+
+    background: #e53935;
+
+    border-radius: 50%;
+
+    transform: translateY(-50%);
+
+}
+
+.editor-success {
+
+    margin-top: 16px;
+
+    color: #2e7d32;
+
+    font-size: .9rem;
+
+}
+
+.save-confirmation {
+
+    min-width: 350px;
+
+    padding: 10px;
+
+}
+
+.save-confirmation h2 {
+
+    margin-top: 0;
+
+}
+
+.save-confirmation p {
+
+    margin-bottom: 24px;
 
 }

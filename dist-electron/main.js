@@ -1,103 +1,187 @@
-import { app, BrowserWindow, ipcMain } from "electron";
-import fs from "node:fs/promises";
-import path from "node:path";
-import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
-class DeckManager {
-  async getCardsCount(filePath) {
-    const contents = await fs.readFile(
-      filePath,
-      "utf-8"
-    );
-    return contents.split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== "").length;
+import { app as c, BrowserWindow as u, ipcMain as l, dialog as g } from "electron";
+import r from "node:fs/promises";
+import a from "node:path";
+import { fileURLToPath as m } from "node:url";
+class y {
+  constructor(e) {
+    this.decksPath = e;
   }
-  async getCards(filePath) {
-    const contents = await fs.readFile(
-      filePath,
+  async getCardsCount(e) {
+    return (await r.readFile(
+      e,
       "utf-8"
-    );
-    return contents.split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== "").map((line) => {
-      const [hanzi, pinyin] = line.split(":");
+    )).split(/\r?\n/).map((t) => t.trim()).filter((t) => t !== "").length;
+  }
+  async getCards(e) {
+    return (await r.readFile(
+      e,
+      "utf-8"
+    )).split(/\r?\n/).map((t) => t.trim()).filter((t) => t !== "").map((t) => {
+      const [i, h] = t.split(":");
       return {
-        hanzi,
-        pinyin
+        hanzi: i,
+        pinyin: h
       };
     });
   }
-  async getDecks() {
-    const decksPath = path.join(
-      process.cwd(),
-      "decks"
+  async getDeckContent(e) {
+    return r.readFile(
+      e,
+      "utf-8"
     );
-    const files = await fs.readdir(decksPath);
-    const deckFiles = files.filter(
-      (file) => file.endsWith(".txt")
+  }
+  async saveDeck(e, n) {
+    await r.writeFile(
+      e,
+      n,
+      "utf-8"
     );
-    const decks = [];
-    for (const file of deckFiles) {
-      const filePath = path.join(
-        decksPath,
-        file
+  }
+  async createDeck(e, n) {
+    const t = a.join(
+      this.decksPath,
+      `${e}.txt`
+    );
+    try {
+      throw await r.access(t), new Error(
+        "A deck with this name already exists."
       );
-      decks.push({
-        name: path.parse(file).name,
-        path: filePath,
+    } catch (i) {
+      if (!(i instanceof Error) || i.code !== "ENOENT")
+        throw i;
+    }
+    await r.writeFile(
+      t,
+      n,
+      "utf-8"
+    );
+  }
+  async deleteDecks(e) {
+    for (const n of e) {
+      const t = a.relative(
+        this.decksPath,
+        n
+      );
+      if (t === "" || t === ".." || t.startsWith(`..${a.sep}`) || a.isAbsolute(t) || a.extname(n) !== ".txt")
+        throw new Error("Invalid deck path.");
+    }
+    await Promise.all(
+      e.map((n) => r.unlink(n))
+    );
+  }
+  async getDecks() {
+    const n = (await r.readdir(this.decksPath)).filter(
+      (i) => i.endsWith(".txt")
+    ), t = [];
+    for (const i of n) {
+      const h = a.join(
+        this.decksPath,
+        i
+      );
+      t.push({
+        name: a.parse(i).name,
+        path: h,
         cardCount: await this.getCardsCount(
-          filePath
+          h
         )
       });
     }
-    return decks;
+    return t;
   }
 }
-createRequire(import.meta.url);
-const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
-const deckManager = new DeckManager();
-process.env.APP_ROOT = path.join(__dirname$1, "..");
-const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
-let win;
-function createWindow() {
-  win = new BrowserWindow({
+const p = a.dirname(m(import.meta.url));
+let o;
+process.env.APP_ROOT = a.join(p, "..");
+const f = process.env.VITE_DEV_SERVER_URL, j = a.join(process.env.APP_ROOT, "dist-electron"), w = a.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = f ? a.join(process.env.APP_ROOT, "public") : w;
+let d;
+function k() {
+  return a.join(c.getPath("userData"), "settings.json");
+}
+async function D() {
+  try {
+    const s = JSON.parse(
+      await r.readFile(k(), "utf-8")
+    );
+    return typeof s.decksPath != "string" ? void 0 : (await r.stat(s.decksPath)).isDirectory() ? s.decksPath : void 0;
+  } catch {
+    return;
+  }
+}
+async function v() {
+  const s = await D();
+  if (s)
+    return s;
+  const e = await g.showOpenDialog({
+    title: "Choose a folder for your flashcard decks",
+    buttonLabel: "Use this folder",
+    properties: ["openDirectory", "createDirectory"]
+  });
+  if (e.canceled || e.filePaths.length === 0)
+    return;
+  const n = e.filePaths[0];
+  return await r.writeFile(
+    k(),
+    JSON.stringify({ decksPath: n }, null, 2),
+    "utf-8"
+  ), n;
+}
+function P() {
+  d = new u({
     width: 1200,
     height: 800,
     minWidth: 900,
     minHeight: 650,
     //frame: false,
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: a.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs")
+      preload: a.join(p, "preload.mjs")
     }
-  });
-  win.removeMenu();
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
-  }
+  }), d.removeMenu(), f ? d.loadURL(f) : d.loadFile(a.join(w, "index.html"));
 }
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-    win = null;
+c.on("window-all-closed", () => {
+  process.platform !== "darwin" && (c.quit(), d = null);
+});
+c.on("activate", () => {
+  u.getAllWindows().length === 0 && P();
+});
+l.handle("decks:load", async () => o.getDecks());
+l.handle("decks:getCards", async (s, e) => o.getCards(e));
+l.handle("decks:getDeckContent", async (s, e) => o.getDeckContent(e));
+l.handle(
+  "decks:save",
+  async (s, e, n) => {
+    await o.saveDeck(
+      e,
+      n
+    );
   }
-});
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+);
+l.handle(
+  "decks:create",
+  async (s, e, n) => {
+    await o.createDeck(
+      e,
+      n
+    );
   }
+);
+l.handle(
+  "decks:delete",
+  async (s, e) => {
+    await o.deleteDecks(e);
+  }
+);
+c.whenReady().then(async () => {
+  const s = await v();
+  if (!s) {
+    c.quit();
+    return;
+  }
+  o = new y(s), P();
 });
-ipcMain.handle("decks:load", async () => {
-  return deckManager.getDecks();
-});
-ipcMain.handle("decks:getCards", async (_, filePath) => {
-  return deckManager.getCards(filePath);
-});
-app.whenReady().then(createWindow);
 export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
+  j as MAIN_DIST,
+  w as RENDERER_DIST,
+  f as VITE_DEV_SERVER_URL
 };

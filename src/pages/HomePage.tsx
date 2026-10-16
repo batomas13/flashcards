@@ -7,6 +7,7 @@ import type { Deck } from "../models/Deck";
 import type { StudyMode } from "../models/StudyMode";
 
 import "../styles/HomePage.css";
+import "../styles/Button.css";
 
 interface HomePageProps {
     onNewDeck: () => void;
@@ -26,6 +27,11 @@ function HomePage({
 
     const [studyOpen, setStudyOpen] = useState(false);
 
+    const [selectedDeckPaths, setSelectedDeckPaths] =
+        useState<string[]>([]);
+
+    const [deleteOpen, setDeleteOpen] = useState(false);
+
     useEffect(() => {
         loadDecks();
     }, []);
@@ -34,6 +40,7 @@ function HomePage({
         try {
             const loadedDecks = await window.api.decks.load();
             setDecks(loadedDecks);
+            setSelectedDeckPaths([]);
         } catch (error) {
             console.error("Failed to load decks:", error);
         }
@@ -47,6 +54,24 @@ function HomePage({
     function closeStudyMenu() {
         setStudyOpen(false);
         setSelectedDeck(null);
+    }
+
+    function toggleDeckSelection(deckPath: string) {
+        setSelectedDeckPaths((previous) => (
+            previous.includes(deckPath)
+                ? previous.filter((path) => path !== deckPath)
+                : [...previous, deckPath]
+        ));
+    }
+
+    async function deleteSelectedDecks() {
+        try {
+            await window.api.decks.delete(selectedDeckPaths);
+            setDeleteOpen(false);
+            await loadDecks();
+        } catch (error) {
+            console.error("Failed to delete decks:", error);
+        }
     }
 
     return (
@@ -63,12 +88,23 @@ function HomePage({
 
                     </div>
 
-                    <button
-                        className="new-deck-button"
-                        onClick={onNewDeck}
-                    >
-                        ➕ New Deck
-                    </button>
+                    <div className="home-header-actions">
+                        {selectedDeckPaths.length > 0 && (
+                            <button
+                                className="delete-decks-button"
+                                onClick={() => setDeleteOpen(true)}
+                            >
+                                Delete ({selectedDeckPaths.length})
+                            </button>
+                        )}
+
+                        <button
+                            className="new-deck-button"
+                            onClick={onNewDeck}
+                        >
+                            ➕ New Deck
+                        </button>
+                    </div>
 
                 </header>
 
@@ -80,6 +116,16 @@ function HomePage({
                             className="deck-card"
                             onClick={() => handleDeckClick(deck)}
                         >
+
+                            <label className="deck-select">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedDeckPaths.includes(deck.path)}
+                                    onClick={(event) => event.stopPropagation()}
+                                    onChange={() => toggleDeckSelection(deck.path)}
+                                    aria-label={`Select ${deck.name}`}
+                                />
+                            </label>
 
                             <button
                                 className="edit-button"
@@ -129,6 +175,35 @@ function HomePage({
                     />
                 )}
 
+            </Modal>
+
+            <Modal
+                open={deleteOpen}
+                onClose={() => setDeleteOpen(false)}
+            >
+                <h2 className="modal-title">
+                    Delete {selectedDeckPaths.length} deck{selectedDeckPaths.length === 1 ? "" : "s"}?
+                </h2>
+
+                <p className="delete-confirmation-message">
+                    This permanently deletes the selected deck files.
+                </p>
+
+                <div className="delete-confirmation-actions">
+                    <button
+                        className="button button-secondary"
+                        onClick={() => setDeleteOpen(false)}
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        className="button delete-confirm-button"
+                        onClick={deleteSelectedDecks}
+                    >
+                        Delete
+                    </button>
+                </div>
             </Modal>
 
         </>

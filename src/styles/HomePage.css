@@ -41,6 +41,16 @@
     color: #777;
 }
 
+.home-header-actions {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    margin-top: 20px;
+}
+
 
 /* ========================= */
 /* Deck Grid                 */
@@ -91,6 +101,66 @@
     transform: translateY(-6px);
 
     box-shadow: 0 14px 30px rgba(0, 0, 0, .12);
+}
+
+.deck-select {
+    position: absolute;
+
+    top: 14px;
+    left: 14px;
+
+    display: flex;
+
+    cursor: pointer;
+}
+
+.deck-select input {
+    appearance: none;
+
+    width: 18px;
+    height: 18px;
+
+    margin: 0;
+
+    border: 1px solid rgba(0, 0, 0, .06);
+
+    border-radius: 6px;
+
+    background: #f8f8f7;
+
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .08);
+
+    cursor: pointer;
+
+    transition: .18s ease;
+}
+
+.deck-select input:hover {
+    background: #f1f1ef;
+
+    box-shadow: 0 3px 7px rgba(0, 0, 0, .1);
+}
+
+.deck-select input:checked {
+    border-color: #d97706;
+
+    background-color: #d97706;
+
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3 3 7-7' fill='none' stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/%3E%3C/svg%3E");
+
+    background-position: center;
+
+    background-repeat: no-repeat;
+
+    background-size: 12px;
+
+    box-shadow: 0 2px 6px rgba(217, 119, 6, .28);
+}
+
+.deck-select input:focus-visible {
+    outline: 2px solid rgba(217, 119, 6, .45);
+
+    outline-offset: 2px;
 }
 
 
@@ -198,4 +268,52 @@
     background: #b45309;
 
     transform: translateY(-2px);
+}
+
+.delete-decks-button,
+.delete-confirm-button {
+    background: #dc2626;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 999px;
+
+    padding: 14px 28px;
+
+    font-size: 1rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.delete-decks-button:hover,
+.delete-confirm-button:hover {
+    background: #b91c1c;
+
+    transform: translateY(-2px);
+}
+
+.delete-confirmation-message {
+    color: #555;
+
+    line-height: 1.5;
+}
+
+.delete-confirmation-actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    margin-top: 28px;
+}
+
+.delete-confirm-button {
+    border-radius: 10px;
 }

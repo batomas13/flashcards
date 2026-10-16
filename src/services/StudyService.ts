@@ -41,6 +41,17 @@ export function createStudySession(
         };
     });
 
+    for (let index = studyCards.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(
+            Math.random() * (index + 1)
+        );
+
+        [studyCards[index], studyCards[randomIndex]] = [
+            studyCards[randomIndex],
+            studyCards[index],
+        ];
+    }
+
     return {
         cards: studyCards,
         mode,

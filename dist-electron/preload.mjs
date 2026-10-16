@@ -1,8 +1,1 @@
-"use strict";
-const electron = require("electron");
-electron.contextBridge.exposeInMainWorld("api", {
-  decks: {
-    load: () => electron.ipcRenderer.invoke("decks:load"),
-    getCards: (filePath) => electron.ipcRenderer.invoke("decks:getCards", filePath)
-  }
-});
+"use strict";const r=require("electron");r.contextBridge.exposeInMainWorld("api",{decks:{load:()=>r.ipcRenderer.invoke("decks:load"),getCards:e=>r.ipcRenderer.invoke("decks:getCards",e),getDeckContent:e=>r.ipcRenderer.invoke("decks:getDeckContent",e),save:(e,c)=>r.ipcRenderer.invoke("decks:save",e,c),create:(e,c)=>r.ipcRenderer.invoke("decks:create",e,c),delete:e=>r.ipcRenderer.invoke("decks:delete",e)}});
