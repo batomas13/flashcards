@@ -1,221 +1,187 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-class DeckManager {
-  constructor(decksPath) {
-    this.decksPath = decksPath;
+import { app as c, BrowserWindow as u, ipcMain as l, dialog as g } from "electron";
+import r from "node:fs/promises";
+import a from "node:path";
+import { fileURLToPath as m } from "node:url";
+class y {
+  constructor(e) {
+    this.decksPath = e;
   }
-  async getCardsCount(filePath) {
-    const contents = await fs.readFile(
-      filePath,
+  async getCardsCount(e) {
+    return (await r.readFile(
+      e,
       "utf-8"
-    );
-    return contents.split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== "").length;
+    )).split(/\r?\n/).map((t) => t.trim()).filter((t) => t !== "").length;
   }
-  async getCards(filePath) {
-    const contents = await fs.readFile(
-      filePath,
+  async getCards(e) {
+    return (await r.readFile(
+      e,
       "utf-8"
-    );
-    return contents.split(/\r?\n/).map((line) => line.trim()).filter((line) => line !== "").map((line) => {
-      const [hanzi, pinyin] = line.split(":");
+    )).split(/\r?\n/).map((t) => t.trim()).filter((t) => t !== "").map((t) => {
+      const [i, h] = t.split(":");
       return {
-        hanzi,
-        pinyin
+        hanzi: i,
+        pinyin: h
       };
     });
   }
-  async getDeckContent(filePath) {
-    return fs.readFile(
-      filePath,
+  async getDeckContent(e) {
+    return r.readFile(
+      e,
       "utf-8"
     );
   }
-  async saveDeck(filePath, contents) {
-    await fs.writeFile(
-      filePath,
-      contents,
+  async saveDeck(e, n) {
+    await r.writeFile(
+      e,
+      n,
       "utf-8"
     );
   }
-  async createDeck(deckName, contents) {
-    const filePath = path.join(
+  async createDeck(e, n) {
+    const t = a.join(
       this.decksPath,
-      `${deckName}.txt`
+      `${e}.txt`
     );
     try {
-      await fs.access(filePath);
-      throw new Error(
+      throw await r.access(t), new Error(
         "A deck with this name already exists."
       );
-    } catch (error) {
-      if (!(error instanceof Error) || error.code !== "ENOENT") {
-        throw error;
-      }
+    } catch (i) {
+      if (!(i instanceof Error) || i.code !== "ENOENT")
+        throw i;
     }
-    await fs.writeFile(
-      filePath,
-      contents,
+    await r.writeFile(
+      t,
+      n,
       "utf-8"
     );
   }
-  async deleteDecks(filePaths) {
-    for (const filePath of filePaths) {
-      const relativePath = path.relative(
+  async deleteDecks(e) {
+    for (const n of e) {
+      const t = a.relative(
         this.decksPath,
-        filePath
+        n
       );
-      if (relativePath === "" || relativePath === ".." || relativePath.startsWith(`..${path.sep}`) || path.isAbsolute(relativePath) || path.extname(filePath) !== ".txt") {
+      if (t === "" || t === ".." || t.startsWith(`..${a.sep}`) || a.isAbsolute(t) || a.extname(n) !== ".txt")
         throw new Error("Invalid deck path.");
-      }
     }
     await Promise.all(
-      filePaths.map((filePath) => fs.unlink(filePath))
+      e.map((n) => r.unlink(n))
     );
   }
   async getDecks() {
-    const files = await fs.readdir(this.decksPath);
-    const deckFiles = files.filter(
-      (file) => file.endsWith(".txt")
-    );
-    const decks = [];
-    for (const file of deckFiles) {
-      const filePath = path.join(
+    const n = (await r.readdir(this.decksPath)).filter(
+      (i) => i.endsWith(".txt")
+    ), t = [];
+    for (const i of n) {
+      const h = a.join(
         this.decksPath,
-        file
+        i
       );
-      decks.push({
-        name: path.parse(file).name,
-        path: filePath,
+      t.push({
+        name: a.parse(i).name,
+        path: h,
         cardCount: await this.getCardsCount(
-          filePath
+          h
         )
       });
     }
-    return decks;
+    return t;
   }
 }
-const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
-let deckManager;
-process.env.APP_ROOT = path.join(__dirname$1, "..");
-const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
-let win;
-function getSettingsPath() {
-  return path.join(app.getPath("userData"), "settings.json");
+const p = a.dirname(m(import.meta.url));
+let o;
+process.env.APP_ROOT = a.join(p, "..");
+const f = process.env.VITE_DEV_SERVER_URL, j = a.join(process.env.APP_ROOT, "dist-electron"), w = a.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = f ? a.join(process.env.APP_ROOT, "public") : w;
+let d;
+function k() {
+  return a.join(c.getPath("userData"), "settings.json");
 }
-async function getDecksPath() {
+async function D() {
   try {
-    const settings = JSON.parse(
-      await fs.readFile(getSettingsPath(), "utf-8")
+    const s = JSON.parse(
+      await r.readFile(k(), "utf-8")
     );
-    if (typeof settings.decksPath !== "string") {
-      return void 0;
-    }
-    const folder = await fs.stat(settings.decksPath);
-    return folder.isDirectory() ? settings.decksPath : void 0;
+    return typeof s.decksPath != "string" ? void 0 : (await r.stat(s.decksPath)).isDirectory() ? s.decksPath : void 0;
   } catch {
-    return void 0;
+    return;
   }
 }
-async function selectDecksPath() {
-  const savedPath = await getDecksPath();
-  if (savedPath) {
-    return savedPath;
-  }
-  const result = await dialog.showOpenDialog({
+async function v() {
+  const s = await D();
+  if (s)
+    return s;
+  const e = await g.showOpenDialog({
     title: "Choose a folder for your flashcard decks",
     buttonLabel: "Use this folder",
     properties: ["openDirectory", "createDirectory"]
   });
-  if (result.canceled || result.filePaths.length === 0) {
-    return void 0;
-  }
-  const decksPath = result.filePaths[0];
-  await fs.writeFile(
-    getSettingsPath(),
-    JSON.stringify({ decksPath }, null, 2),
+  if (e.canceled || e.filePaths.length === 0)
+    return;
+  const n = e.filePaths[0];
+  return await r.writeFile(
+    k(),
+    JSON.stringify({ decksPath: n }, null, 2),
     "utf-8"
-  );
-  return decksPath;
+  ), n;
 }
-function createWindow() {
-  win = new BrowserWindow({
+function P() {
+  d = new u({
     width: 1200,
     height: 800,
     minWidth: 900,
     minHeight: 650,
     //frame: false,
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: a.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs")
+      preload: a.join(p, "preload.mjs")
     }
-  });
-  win.removeMenu();
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
-  }
+  }), d.removeMenu(), f ? d.loadURL(f) : d.loadFile(a.join(w, "index.html"));
 }
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-    win = null;
-  }
+c.on("window-all-closed", () => {
+  process.platform !== "darwin" && (c.quit(), d = null);
 });
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+c.on("activate", () => {
+  u.getAllWindows().length === 0 && P();
 });
-ipcMain.handle("decks:load", async () => {
-  return deckManager.getDecks();
-});
-ipcMain.handle("decks:getCards", async (_, filePath) => {
-  return deckManager.getCards(filePath);
-});
-ipcMain.handle("decks:getDeckContent", async (_, filePath) => {
-  return deckManager.getDeckContent(filePath);
-});
-ipcMain.handle(
+l.handle("decks:load", async () => o.getDecks());
+l.handle("decks:getCards", async (s, e) => o.getCards(e));
+l.handle("decks:getDeckContent", async (s, e) => o.getDeckContent(e));
+l.handle(
   "decks:save",
-  async (_, filePath, contents) => {
-    await deckManager.saveDeck(
-      filePath,
-      contents
+  async (s, e, n) => {
+    await o.saveDeck(
+      e,
+      n
     );
   }
 );
-ipcMain.handle(
+l.handle(
   "decks:create",
-  async (_, deckName, contents) => {
-    await deckManager.createDeck(
-      deckName,
-      contents
+  async (s, e, n) => {
+    await o.createDeck(
+      e,
+      n
     );
   }
 );
-ipcMain.handle(
+l.handle(
   "decks:delete",
-  async (_, filePaths) => {
-    await deckManager.deleteDecks(filePaths);
+  async (s, e) => {
+    await o.deleteDecks(e);
   }
 );
-app.whenReady().then(async () => {
-  const decksPath = await selectDecksPath();
-  if (!decksPath) {
-    app.quit();
+c.whenReady().then(async () => {
+  const s = await v();
+  if (!s) {
+    c.quit();
     return;
   }
-  deckManager = new DeckManager(decksPath);
-  createWindow();
+  o = new y(s), P();
 });
 export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
+  j as MAIN_DIST,
+  w as RENDERER_DIST,
+  f as VITE_DEV_SERVER_URL
 };
