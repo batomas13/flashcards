@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Header from "../components/Header";
 import Card from "../components/Card";
@@ -22,13 +22,13 @@ interface StudyPageProps {
     onBack: () => void;
 }
 
+const PAGE_TURN_DURATION = 800;
+
 function StudyPage({
     deck,
     mode,
     onBack,
 }: StudyPageProps) {
-
-    const PAGE_TURN_DURATION = 800;
 
     const [session, setSession] =
         useState<StudySession | null>(null);
@@ -40,33 +40,36 @@ function StudyPage({
     const [animation, setAnimation] =
         useState<CardAnimation>(null);
 
-    useEffect(() => {
+    const [changingCard, setChangingCard] = useState(false);
 
-        async function loadStudySession() {
+    const loadStudySession = useCallback(async (): Promise<StudySession> => {
+        const cards: FlashCard[] =
+            await window.api.decks.getCards(deck.path);
 
-            const cards: FlashCard[] =
-                await window.api.decks.getCards(deck.path);
-
-            const studySession =
-                createStudySession(cards, mode);
-
-            setSession(studySession);
-
-        }
-
-        loadStudySession();
-
+        return createStudySession(cards, mode);
     }, [deck.path, mode]);
 
-    function toggleCard() {
-        setOpen((previous) => !previous);
-    }
+    useEffect(() => {
 
-    function previousCard() {
+        loadStudySession().then(setSession);
 
-        if (!session || currentIndex === 0) {
+    }, [loadStudySession]);
+
+    const toggleCard = useCallback(() => {
+        if (changingCard) {
             return;
         }
+
+        setOpen((previous) => !previous);
+    }, [changingCard]);
+
+    const previousCard = useCallback(() => {
+
+        if (!session || currentIndex === 0 || changingCard) {
+            return;
+        }
+
+        setChangingCard(true);
 
         setOpen(false);
 
@@ -82,27 +85,46 @@ function StudyPage({
 
                 setAnimation(null);
 
+                setChangingCard(false);
+
             }, PAGE_TURN_DURATION / 2);
 
         }, PAGE_TURN_DURATION / 2);
-    }
+    }, [changingCard, currentIndex, session]);
 
-    function nextCard() {
+    const nextCard = useCallback(() => {
 
-        if (
-            !session ||
-            currentIndex === session.cards.length - 1
-        ) {
+        if (!session || changingCard) {
             return;
         }
+
+        const isFinalCard =
+            currentIndex === session.cards.length - 1;
+
+        setChangingCard(true);
 
         setOpen(false);
 
         setAnimation("next-close");
 
-        setTimeout(() => {
+        setTimeout(async () => {
 
-            setCurrentIndex((previous) => previous + 1);
+            if (isFinalCard) {
+                try {
+                    const reloadedSession =
+                        await loadStudySession();
+
+                    setSession(reloadedSession);
+                    setCurrentIndex(0);
+                } catch (error) {
+                    console.error(
+                        "Failed to reload deck:",
+                        error
+                    );
+                }
+            } else {
+                setCurrentIndex((previous) => previous + 1);
+            }
 
             setAnimation("next-open");
 
@@ -110,10 +132,49 @@ function StudyPage({
 
                 setAnimation(null);
 
+                setChangingCard(false);
+
             }, PAGE_TURN_DURATION / 2);
 
         }, PAGE_TURN_DURATION / 2);
-    }
+    }, [changingCard, currentIndex, loadStudySession, session]);
+
+    useEffect(() => {
+        function handleKeyDown(event: KeyboardEvent) {
+            if (
+                event.target instanceof HTMLInputElement ||
+                event.target instanceof HTMLTextAreaElement
+            ) {
+                return;
+            }
+
+            if (event.code === "Space") {
+                event.preventDefault();
+                toggleCard();
+                return;
+            }
+
+            if (
+                event.key === "Enter" ||
+                event.key === "ArrowRight"
+            ) {
+                event.preventDefault();
+                nextCard();
+                return;
+            }
+
+            if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                previousCard();
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [nextCard, previousCard, toggleCard]);
 
     if (!session) {
         return (
@@ -159,6 +220,7 @@ function StudyPage({
                 <button
                     className="button button-secondary"
                     onClick={previousCard}
+                    disabled={changingCard}
                 >
                     ← Previous
                 </button>
@@ -166,6 +228,7 @@ function StudyPage({
                 <button
                     className="button button-primary"
                     onClick={nextCard}
+                    disabled={changingCard}
                 >
                     Next →
                 </button>
